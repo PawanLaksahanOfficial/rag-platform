@@ -25,3 +25,7 @@ output "key_vault_name" {
 output "key_vault_uri" {
   value = azurerm_key_vault.main.vault_uri
 }
+
+output "openai_endpoint" {
+  value = "https://${azurerm_cognitive_account.ai.custom_subdomain_name}.openai.azure.com/"
+}

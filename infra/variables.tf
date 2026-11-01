@@ -14,3 +14,9 @@ variable "env" {
   type        = string
   default     = "dev"
 }
+
+variable "openai_location" {
+  type    = string
+  default = "eastus"
+}
+ 
