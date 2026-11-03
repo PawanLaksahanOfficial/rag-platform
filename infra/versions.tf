@@ -5,7 +5,6 @@ terraform {
     resource_group_name  = "rg-tfstate"
     storage_account_name = "sttfstatepl84k"
     container_name       = "tfstate"
-    key                  = "rag-platform/dev.tfstate"
     use_azuread_auth     = true
   }
 

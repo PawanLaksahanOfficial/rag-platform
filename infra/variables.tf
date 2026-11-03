@@ -12,7 +12,11 @@ variable "location" {
 variable "env" {
   description = "Environment name"
   type        = string
-  default     = "dev"
+
+  validation {
+    condition     = contains(["test", "prod"], var.env)
+    error_message = "env must be test or prod."
+  }
 }
 
 variable "openai_location" {

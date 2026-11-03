@@ -1,0 +1,88 @@
+name: ci
+
+on:
+  pull_request:
+    branches: [main]
+
+env:
+  IMAGE: ghcr.io/pawanlaksahanofficial/rag-api
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: pip install -r requirements-app.txt pytest httpx
+      - run: pytest -q
+
+  terraform-review:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+      - run: terraform -chdir=infra fmt -check -recursive
+      - run: terraform -chdir=infra init -backend=false
+      - run: terraform -chdir=infra validate
+      - uses: bridgecrewio/checkov-action@v12
+        with:
+          directory: infra
+          framework: terraform
+          soft_fail: true
+
+  build-scan-push:
+    needs: [test, terraform-review]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build --pull -t $IMAGE:${{ github.event.pull_request.head.sha }} .
+      - uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: ${{ env.IMAGE }}:${{ github.event.pull_request.head.sha }}
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+          exit-code: "1"
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - run: docker push $IMAGE:${{ github.event.pull_request.head.sha }}
+
+  deploy-test:
+    needs: build-scan-push
+    runs-on: ubuntu-latest
+    concurrency: test-environment
+    permissions:
+      contents: read
+      packages: read
+    env:
+      TAG: ${{ github.event.pull_request.head.sha }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - run: docker pull $IMAGE:$TAG
+      - uses: helm/kind-action@v1
+        with:
+          cluster_name: test
+      - run: kind load docker-image $IMAGE:$TAG --name test
+      - name: Deploy to test
+        run: |
+          helm upgrade --install rag-api charts/rag-api -n test --create-namespace \
+            -f charts/rag-api/values-test.yaml \
+            --set image.repository=$IMAGE --set image.tag=$TAG \
+            --atomic --timeout 2m
+      - name: Smoke test (QA stage)
+        run: |
+          kubectl -n test port-forward svc/rag-api 8080:8000 &
+          sleep 3
+          curl -fsS http://localhost:8080/health

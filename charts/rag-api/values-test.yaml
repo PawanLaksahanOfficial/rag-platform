@@ -1,0 +1,27 @@
+replicaCount: 2
+image:
+  repository: rag-api
+  tag: "0.2"
+  pullPolicy: IfNotPresent
+service:
+  port: 8000
+livenessProbe:
+  httpGet:
+    path: /health
+    port: http
+readinessProbe:
+  httpGet:
+    path: /health
+    port: http
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    memory: 128Mi
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 10001
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop: ["ALL"]
