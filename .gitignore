@@ -7,4 +7,5 @@ __pycache__/
 *.tfstate
 *.tfstate.*
 *.tfvars
+!infra/envs/*.tfvars
 tfplan
