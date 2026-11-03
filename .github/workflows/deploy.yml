@@ -1,0 +1,39 @@
+name: deploy
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [main]
+
+env:
+  IMAGE: ghcr.io/pawanlaksahanofficial/rag-api
+
+jobs:
+  deploy-prod:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    environment: production
+    permissions:
+      contents: read
+      packages: read
+    env:
+      TAG: ${{ github.event.pull_request.head.sha }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - run: docker pull $IMAGE:$TAG
+      - uses: helm/kind-action@v1
+        with:
+          cluster_name: prod
+      - run: kind load docker-image $IMAGE:$TAG --name prod
+      - name: Deploy the same tested image to prod
+        run: |
+          helm upgrade --install rag-api charts/rag-api -n prod --create-namespace \
+            -f charts/rag-api/values-test.yaml --set replicaCount=3 \
+            --set image.repository=$IMAGE --set image.tag=$TAG \
+            --atomic --timeout 2m
+          kubectl -n prod get pods
