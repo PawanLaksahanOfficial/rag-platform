@@ -5,6 +5,7 @@ RUN pip install --no-cache-dir --prefix=/install -r requirements-app.txt
 
 FROM python:3.13-slim
 RUN useradd --create-home --uid 10001 appuser
+RUN pip uninstall -y pip
 WORKDIR /app
 COPY --from=build /install /usr/local
 COPY app ./app
