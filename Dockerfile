@@ -4,8 +4,11 @@ COPY requirements-app.txt .
 RUN pip install --no-cache-dir --prefix=/install -r requirements-app.txt
 
 FROM python:3.13-slim
-RUN useradd --create-home --uid 10001 appuser
-RUN pip uninstall -y pip
+RUN apt-get update \
+    && DEBIAN_FRONTEND=noninteractive apt-get upgrade -y \
+    && rm -rf /var/lib/apt/lists/* \
+    && useradd --create-home --uid 10001 appuser \
+    && pip uninstall -y pip
 WORKDIR /app
 COPY --from=build /install /usr/local
 COPY app ./app

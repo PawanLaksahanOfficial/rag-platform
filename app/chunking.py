@@ -1,9 +1,11 @@
 from dataclasses import dataclass
 
+
 @dataclass
 class Chunk:
     index: int
-    text:str
+    text: str
+
 
 def chunk_text(text: str, size: int = 200, overlap: int = 50) -> list[Chunk]:
     if overlap >= size:
@@ -13,12 +15,13 @@ def chunk_text(text: str, size: int = 200, overlap: int = 50) -> list[Chunk]:
     chunks: list[Chunk] = []
 
     for i, start in enumerate(range(0, len(words), step)):
-        piece = words[start:start + size]
+        piece = words[start : start + size]
         chunks.append(Chunk(index=i, text=" ".join(piece)))
         if start + size >= len(words):
             break
 
     return chunks
+
 
 if __name__ == "__main__":
     sample = " ".join(f"word{n}" for n in range(500))

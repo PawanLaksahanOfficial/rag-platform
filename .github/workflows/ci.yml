@@ -8,6 +8,21 @@ env:
   IMAGE: ghcr.io/pawanlaksahanofficial/rag-api
 
 jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: |
+            requirements-dev.txt
+            requirements-app.txt
+      - run: pip install -r requirements-dev.txt
+      - run: ruff check --output-format=github .
+      - run: ruff format --check .
+
   test:
     runs-on: ubuntu-latest
     steps:
@@ -15,8 +30,12 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.13"
-      - run: pip install -r requirements-app.txt pytest httpx
-      - run: pytest -q
+          cache: pip
+          cache-dependency-path: |
+            requirements-dev.txt
+            requirements-app.txt
+      - run: pip install -r requirements-dev.txt
+      - run: pytest --cov
 
   terraform-review:
     runs-on: ubuntu-latest
@@ -33,7 +52,7 @@ jobs:
           soft_fail: true
 
   build-scan-push:
-    needs: [test, terraform-review]
+    needs: [quality, test, terraform-review]
     runs-on: ubuntu-latest
     permissions:
       contents: read
