@@ -24,3 +24,9 @@ def test_overlap_must_be_smaller_than_size():
 
 def test_empty_text_gives_no_chunks():
     assert chunk_text("") == []
+
+
+@pytest.mark.parametrize(("size", "overlap"), [(0, 0), (5, -1)])
+def test_invalid_size_or_overlap_is_rejected(size, overlap):
+    with pytest.raises(ValueError):
+        chunk_text("a b c", size=size, overlap=overlap)

@@ -8,6 +8,10 @@ class Chunk:
 
 
 def chunk_text(text: str, size: int = 200, overlap: int = 50) -> list[Chunk]:
+    if size < 1:
+        raise ValueError("size must be at least 1")
+    if overlap < 0:
+        raise ValueError("overlap cannot be negative")
     if overlap >= size:
         raise ValueError("overlap must be smaller than size")
     words = text.split()

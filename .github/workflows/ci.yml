@@ -105,3 +105,8 @@ jobs:
           kubectl -n test port-forward svc/rag-api 8080:8000 &
           sleep 3
           curl -fsS http://localhost:8080/health
+          code=$(curl -s -o /dev/null -w "%{http_code}" -X POST http://localhost:8080/chunk \
+            -H "Content-Type: application/json" -d '{"text":"a b c","size":5,"overlap":5}')
+          echo "Invalid request returned HTTP $code"
+          test "$code" = "422"
+
