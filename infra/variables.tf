@@ -24,7 +24,6 @@ variable "openai_location" {
   default = "eastus"
 }
 
-
 variable "kv_purge_protection" {
   description = "Block permanent deletion of the Key Vault and its secrets during the retention period"
   type        = bool
@@ -42,4 +41,25 @@ variable "storage_replication" {
   }
 }
 
- 
+variable "kubernetes_version" {
+  description = "AKS Kubernetes minor version; patches are applied automatically"
+  type        = string
+  default     = "1.36"
+}
+
+variable "aks_sku_tier" {
+  description = "AKS control plane tier. Standard has an uptime SLA; Free has none"
+  type        = string
+  default     = "Standard"
+
+  validation {
+    condition     = contains(["Free", "Standard"], var.aks_sku_tier)
+    error_message = "aks_sku_tier must be Free or Standard."
+  }
+}
+
+variable "aks_node_size" {
+  description = "VM size for the AKS system node pool"
+  type        = string
+  default     = "Standard_D2ads_v5"
+}
