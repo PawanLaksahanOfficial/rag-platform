@@ -1,4 +1,6 @@
 resource "azurerm_cognitive_account" "ai" {
+  #checkov:skip=CKV_AZURE_134:Accepted risk until private networking, see issue 8. Local keys are off, so access needs Entra ID.
+  #checkov:skip=CKV2_AZURE_22:Not required. Microsoft managed keys are enough and no regulation requires customer managed keys.
   name                          = "aif-rag-${var.env}-${random_string.suffix.result}"
   location                      = var.openai_location
   resource_group_name           = azurerm_resource_group.main.name
@@ -8,6 +10,10 @@ resource "azurerm_cognitive_account" "ai" {
   local_auth_enabled            = false
   public_network_access_enabled = true
   tags                          = local.tags
+
+  identity {
+    type = "SystemAssigned"
+  }
 }
 
 resource "azurerm_cognitive_deployment" "chat" {
