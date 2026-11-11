@@ -45,11 +45,11 @@ jobs:
       - run: terraform -chdir=infra fmt -check -recursive
       - run: terraform -chdir=infra init -backend=false
       - run: terraform -chdir=infra validate
-      - uses: bridgecrewio/checkov-action@v12
+      - uses: bridgecrewio/checkov-action@a32f8b5c5c7c958bc38947c65dfe139debaf0607 # v12.3140.0
         with:
           directory: infra
           framework: terraform
-          soft_fail: true
+
 
   build-scan-push:
     needs: [quality, test, terraform-review]
