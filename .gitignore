@@ -9,3 +9,7 @@ __pycache__/
 *.tfvars
 !infra/envs/*.tfvars
 tfplan
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
